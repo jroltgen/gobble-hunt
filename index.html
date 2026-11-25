@@ -73,6 +73,7 @@ input[type=text] {
 input[type=text]::placeholder { color: var(--muted); opacity: .6; letter-spacing: 0; font-family: var(--body); font-weight: 400; font-size: 1rem; }
 input[type=text]:focus { outline: none; border-color: var(--gold); }
 #codeInput { text-transform: uppercase; }
+#codeInput::placeholder { text-transform: none; }
 .btn {
   appearance: none; border: 0; cursor: pointer;
   font: 800 1.1rem var(--display);
@@ -122,6 +123,15 @@ footer { text-align: center; font-size: .9rem; }
 .confirm { display: flex; gap: 10px; flex-wrap: wrap; }
 .confirm > * { flex: 1 1 120px; }
 .danger { background: var(--cranberry); color: var(--fg); }
+.btn:disabled, input:disabled { opacity: .45; cursor: not-allowed; }
+.racebar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.clockbox { display: flex; flex-direction: column; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; }
+.clockbox .l { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+#clock { font: 800 1.5rem var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.penalty { font-size: .9rem; margin-top: -10px; }
+.penalty b { color: var(--fg); }
+.lock { background: var(--cranberry); color: var(--fg); border-radius: 12px; padding: 10px 14px; font-weight: 700; }
+.lock b { font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -137,10 +147,12 @@ footer { text-align: center; font-size: .9rem; }
    ========================================================================= */
 const HUNT = {
   title: "The Great Gobble Hunt",
-  prize: "Head back to the dining table and tell the host the final word. Your prize is waiting!",
+  prize: "Race to the dining table and show the host this screen. The first team there wins!",
+  hostCode: "GRAVYBOAT",   // code the host types to open the setup sheet
+  hintLockSeconds: 15,     // taking a hint locks the code box this long
   stops: [
     { place: "Refrigerator (stick the note inside the door)",
-      clue: "I'm cold inside but full of cheer,\nthe pumpkin pie is waiting here.\nOpen me up and take a peek,\nthe first code word is what you seek.",
+      clue: "I'm cold inside but full of cheer,\nthe pumpkin pie is waiting here.\nOpen me up and take a peek,\na secret code word is what you seek.",
       hint: "It hums in the kitchen and keeps the leftovers cold.",
       code: "PILGRIM",
       fact: "The 1621 harvest feast in Plymouth lasted three days, and about 90 Wampanoag guests outnumbered the roughly 50 colonists." },
@@ -194,7 +206,12 @@ const HUNT = {
 /* ========================================================================= */
 
 const KEY = "gobble-hunt-v1";
+const HOST_KEY = "gobble-hunt-host";
 const N = HUNT.stops.length;
+const LOCK_MS = HUNT.hintLockSeconds * 1000;
+const lockLeft = () => Math.max(0, (state.lockUntil || 0) - Date.now());
+function hostOk() { try { return localStorage.getItem(HOST_KEY) === "1"; } catch (e) { return ui.host === true; } }
+function setHost(on) { ui.host = on; try { on ? localStorage.setItem(HOST_KEY, "1") : localStorage.removeItem(HOST_KEY); } catch (e) {} }
 const app = document.getElementById("app");
 const norm = s => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -202,7 +219,18 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 let state = load() || fresh();
 let ui = { justFound: false, wrong: 0, confirmReset: false };
 
-function fresh() { return { team: "", step: 0, started: null, finished: null, hints: [], }; }
+/* Every team gets the stops in a shuffled order, except the last stop, which always comes last.
+   That way teams don't trail each other from room to room. */
+function makeOrder() {
+  const a = [...Array(N - 1).keys()];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return [...a, N - 1];
+}
+function stopAt(i) {
+  const o = Array.isArray(state.order) && state.order.length === N ? state.order : [...Array(N).keys()];
+  return HUNT.stops[o[i]];
+}
+function fresh() { return { team: "", step: 0, started: null, finished: null, hints: [], order: makeOrder() }; }
 function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && typeof s.step === "number" ? s : null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
@@ -240,7 +268,7 @@ function fmtTime(ms) {
 }
 
 function render() {
-  if (location.hash === "#host") return renderHost();
+  if (location.hash === "#host") return hostOk() ? renderHost() : renderHostLogin();
   if (!state.started) return renderStart();
   if (state.finished) return renderDone();
   if (ui.justFound) return renderFound();
@@ -266,45 +294,49 @@ function renderStart() {
         <li>Read the riddle and go find the spot it describes.</li>
         <li>Look for a sticky note with a code word on it.</li>
         <li>Type the code word into your phone to unlock the next clue.</li>
-        <li>Stuck? Tap Get a hint. Hints add 1 minute to your time.</li>
+        <li>Stuck? Tap Get a hint, but your code box locks for ${HUNT.hintLockSeconds} seconds.</li>
         <li>Leave each note where you found it for the next team.</li>
+        <li>Wait for the host to say Go, then everyone taps Start at once. First team back to the dining table wins!</li>
       </ol>
     </div>
     <footer><button class="link" type="button" id="hostLink">Host setup (no peeking, players!)</button></footer>`;
   document.getElementById("startForm").onsubmit = e => {
     e.preventDefault();
     state.team = document.getElementById("teamInput").value.trim() || "Team Turkey";
-    state.started = Date.now(); state.step = 0; state.hints = []; state.finished = null;
+    state.started = Date.now(); state.step = 0; state.hints = []; state.finished = null; state.order = makeOrder(); state.lockUntil = 0;
     save(); render(); scrollTo(0, 0);
   };
   document.getElementById("hostLink").onclick = () => { location.hash = "host"; };
 }
 
 function renderClue() {
-  const i = state.step, s = HUNT.stops[i];
+  const i = state.step, s = stopAt(i);
   const usedHint = state.hints.includes(i);
+  const locked = lockLeft() > 0;
   app.innerHTML = `
-    <header style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+    <header class="racebar">
       <span class="eyebrow">${esc(state.team)}</span>
-      <span class="muted" style="font-variant-numeric:tabular-nums">⏱ <span id="clock">${fmtTime(Date.now() - state.started + state.hints.length * 60000)}</span></span>
+      <span class="clockbox"><span class="l">Race time</span><span id="clock">${fmtTime(Date.now() - state.started)}</span></span>
     </header>
+    <p class="muted penalty">Hints taken: <b>${state.hints.length}</b> · lockout penalties: <b>${state.hints.length * HUNT.hintLockSeconds}s</b></p>
     ${fan(i)}
     <section class="card">
-      <span class="eyebrow">Clue ${i + 1} of ${N}</span>
+      <span class="eyebrow">Clue ${i + 1} of ${N}${i === N - 1 ? " · Final clue" : ""}</span>
       <p class="riddle">${esc(s.clue)}</p>
-      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost" type="button" id="hintBtn">Get a hint (+1 minute)</button>`}
+      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost" type="button" id="hintBtn">Get a hint (locks you out ${HUNT.hintLockSeconds} seconds)</button>`}
     </section>
     <form class="card" id="codeForm">
       <label for="codeInput">Code word from the sticky note</label>
-      <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Type the code word">
-      <p class="feedback" id="fb" aria-live="polite"></p>
-      <button class="btn" type="submit">Check code</button>
+      <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${locked ? "Locked for your hint…" : "Type the code word"}" ${locked ? "disabled" : ""}>
+      ${locked ? `<p class="lock" id="lock" aria-live="polite">Hint penalty: code box unlocks in <b id="lockSecs">${Math.ceil(lockLeft() / 1000)}</b>s</p>` : `<p class="feedback" id="fb" aria-live="polite"></p>`}
+      <button class="btn" type="submit" ${locked ? "disabled" : ""}>Check code</button>
     </form>
     <footer><button class="link" type="button" id="quit">Start over</button></footer>`;
   const hb = document.getElementById("hintBtn");
-  if (hb) hb.onclick = () => { state.hints.push(i); save(); render(); };
+  if (hb) hb.onclick = () => { state.hints.push(i); state.lockUntil = Date.now() + LOCK_MS; save(); render(); };
   document.getElementById("codeForm").onsubmit = e => {
     e.preventDefault();
+    if (lockLeft() > 0) return;
     const input = document.getElementById("codeInput");
     const fb = document.getElementById("fb");
     if (!norm(input.value)) { fb.className = "feedback bad"; fb.textContent = "Type the word from the sticky note first."; return; }
@@ -338,7 +370,7 @@ function renderReset() {
 }
 
 function renderFound() {
-  const i = state.step - 1, s = HUNT.stops[i];
+  const i = state.step - 1, s = stopAt(i);
   const last = state.step >= N;
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:6px">
@@ -358,8 +390,7 @@ function renderFound() {
 }
 
 function renderDone() {
-  const penalty = state.hints.length * 60000;
-  const total = state.finished - state.started + penalty;
+  const total = state.finished - state.started;
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
       <span class="eyebrow">${esc(state.team)}</span>
@@ -373,7 +404,7 @@ function renderDone() {
     <section class="card">
       <h3>Show this screen to the host</h3>
       <p>${esc(HUNT.prize)}</p>
-      <p class="muted">Final time includes ${state.hints.length} minute${state.hints.length === 1 ? "" : "s"} of hint penalty.</p>
+      <p class="muted">Your time includes ${state.hints.length * HUNT.hintLockSeconds} seconds locked out for hints.</p>
     </section>
     <button class="ghost" type="button" id="again">Play again with a new team</button>`;
   document.getElementById("again").onclick = () => { state = fresh(); save(); render(); scrollTo(0, 0); };
@@ -381,7 +412,7 @@ function renderDone() {
 
 function renderHost() {
   const rows = HUNT.stops.map((s, i) => `
-    <tr><td>${i + 1}</td><td>${esc(s.place)}</td><td class="code">${esc(norm(s.code))}</td></tr>`).join("");
+    <tr><td>${i === N - 1 ? "Last" : "Any order"}</td><td>${esc(s.place)}</td><td class="code">${esc(norm(s.code))}</td></tr>`).join("");
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
       <span class="eyebrow">Host setup</span>
@@ -392,24 +423,55 @@ function renderHost() {
         <li>Write each code word in big letters on its own sticky note.</li>
         <li>Hide each note at its spot. Players only see the riddles, never this list.</li>
         <li>Send everyone the link to this page. Each phone (or team) plays on its own.</li>
-        <li>Fastest final time wins. Each hint adds 1 minute.</li>
+        <li>Each team gets the first ${N - 1} stops in a different shuffled order. The last stop is always last.</li>
+        <li>Gather everyone, shout Go, and have every team tap Start the hunt at the same moment.</li>
+        <li>Taking a hint locks that team's code box for ${HUNT.hintLockSeconds} seconds.</li>
+        <li>Wait at the dining table. The first team to arrive with the finish screen showing wins.</li>
       </ol>
     </section>
     <div class="card tablebox">
       <table class="sheet">
-        <thead><tr><th>#</th><th>Hide the note at</th><th>Write this code</th></tr></thead>
+        <thead><tr><th>When</th><th>Hide the note at</th><th>Write this code</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <button class="btn" type="button" id="back">Back to the game</button>`;
-  document.getElementById("back").onclick = () => { history.replaceState(null, "", location.pathname + location.search); render(); scrollTo(0, 0); };
+    <div class="row">
+      <button class="btn" type="button" id="back">Back to the game</button>
+      <button class="ghost" type="button" id="lockHost">Lock host sheet</button>
+    </div>`;
+  document.getElementById("back").onclick = leaveHost;
+  document.getElementById("lockHost").onclick = () => { setHost(false); leaveHost(); };
+}
+
+function leaveHost() { history.replaceState(null, "", location.pathname + location.search); render(); scrollTo(0, 0); }
+
+function renderHostLogin() {
+  app.innerHTML = `
+    <form class="card" id="hostForm" style="margin-top:12vh">
+      <span class="eyebrow">Host only</span>
+      <h2>Enter the host code</h2>
+      <p class="muted">The host sheet shows every hiding spot and code word, so players shouldn't see it.</p>
+      <label for="hostInput">Host code</label>
+      <input type="text" id="hostInput" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase">
+      <p class="feedback" id="hostFb" aria-live="polite"></p>
+      <button class="btn" type="submit">Open host sheet</button>
+      <button class="ghost" type="button" id="hostBack">Back to the game</button>
+    </form>`;
+  document.getElementById("hostForm").onsubmit = e => {
+    e.preventDefault();
+    if (norm(document.getElementById("hostInput").value) === norm(HUNT.hostCode)) { setHost(true); render(); scrollTo(0, 0); }
+    else { const fb = document.getElementById("hostFb"); fb.className = "feedback bad"; fb.textContent = "That's not the host code."; }
+  };
+  document.getElementById("hostBack").onclick = leaveHost;
 }
 
 window.addEventListener("hashchange", render);
 setInterval(() => {
   const c = document.getElementById("clock");
-  if (c && state.started && !state.finished) c.textContent = fmtTime(Date.now() - state.started + state.hints.length * 60000);
-}, 1000);
+  if (c && state.started && !state.finished) c.textContent = fmtTime(Date.now() - state.started);
+  const ls = document.getElementById("lockSecs");
+  if (ls) { const left = lockLeft(); if (left <= 0) render(); else ls.textContent = Math.ceil(left / 1000); }
+}, 250);
 render();
 </script>
 </body>
