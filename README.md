@@ -23,7 +23,7 @@ Scan the code with a phone camera to open the game. For a full-page sign to prin
 
 ## Host setup
 
-Print [`feather-code-cards.pdf`](feather-code-cards.pdf) at actual size on one sheet of letter paper. It has all 10 code words, each inside a feather to cut out, with a small reminder of where that one gets hidden. Laminate the sheet, cut around each feather (leave a thin clear edge so the seal holds), and tape them up.
+Print [`feather-code-cards.pdf`](feather-code-cards.pdf) at actual size on one sheet of letter paper. It has all 10 code words, each inside a feather in the game's colors, ready to cut out. Laminate the sheet, cut around each feather (leave a thin clear edge so the seal holds), and tape them up.
 
 Tap **Host setup** at the bottom of the start screen and enter the host code. The host sheet lists each hiding spot and the code word to write on its note. **Lock host sheet** hides it again on that phone.
 
