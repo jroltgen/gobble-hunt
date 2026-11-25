@@ -191,7 +191,7 @@ html.fitpage, html.fitpage body { height: 100%; overflow: hidden; }
    ========================================================================= */
 const HUNT = {
   title: "The Great Gobble Hunt",
-  prize: "Race to the dining table and show the host this screen. The first team there wins!",
+  prize: "You found all 10 feathers and finished the Great Gobble Hunt. Happy Thanksgiving!",
   hostCode: "GRAVYBOAT",   // code the host types to open the setup sheet
   hintLockSeconds: 15,     // taking a hint locks the code box this long
   revealLockSeconds: 30,   // showing the code word adds this much more lockout
@@ -472,7 +472,7 @@ function renderDone() {
       <div class="stat"><div class="n">${helpCount()}</div><div class="l">Hints used</div></div>
     </div>
     <section class="card">
-      <h3>Show this screen to the host</h3>
+      <h3>Congratulations, you finished!</h3>
       <p>${esc(HUNT.prize)}</p>
       <p class="muted">Your time includes ${penaltySecs()} seconds locked out for hints.</p>
     </section>
