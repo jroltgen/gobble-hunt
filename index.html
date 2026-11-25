@@ -28,6 +28,7 @@
 * { box-sizing: border-box; }
 html, body { min-height: 100%; }
 body {
+  margin: 0;
   background: var(--bg);
   background-image: radial-gradient(120% 60% at 50% 0%, #3d2329 0%, var(--bg) 60%);
   color: var(--fg);
@@ -132,6 +133,48 @@ footer { text-align: center; font-size: .9rem; }
 .penalty b { color: var(--fg); }
 .lock { background: var(--cranberry); color: var(--fg); border-radius: 12px; padding: 10px 14px; font-weight: 700; }
 .lock b { font-variant-numeric: tabular-nums; }
+
+/* host sheet stop cards */
+.stoplist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.stopcard { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.stophead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.stopcard .code { font: 800 1.25rem var(--display); color: var(--gold); letter-spacing: .06em; }
+.stopcard .place { font-weight: 700; }
+.riddle-sm { white-space: pre-line; color: var(--muted); font-size: .95rem; border-left: 3px solid var(--line); padding-left: 12px; }
+.hint-sm { font-size: .88rem; color: var(--muted); }
+.hint-sm b { color: var(--fg); }
+
+/* One-screen layout for the clue and found screens */
+html.fitpage, html.fitpage body { height: 100%; overflow: hidden; }
+.wrap.fit { height: 100%; overflow: hidden; padding-block: 10px; gap: 10px; }
+.fit > * { flex: none; }
+.link.tiny { font-size: .8rem; padding: 2px 0; }
+.fit .clockbox { padding: 3px 10px; }
+.fit #clock { font-size: 1.3rem; }
+.statusrow { display: flex; align-items: center; gap: 10px; }
+.statusrow .mini { width: 76px; flex: none; }
+.statustext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.statustext .teamname { font: 800 1rem var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.statustext .eyebrow { font-size: .72rem; }
+.clockcol { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fit .penalty { margin: 0; font-size: .82rem; }
+.codelabel { font-size: .85rem; }
+@media (max-height: 600px) { .codelabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
+.fit .card { padding: 14px 16px; gap: 10px; border-radius: 16px; }
+.fit .cluecard { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+.fit .codecard { margin-top: auto; }
+.fit .riddle { font-size: .95rem; line-height: 1.38; }
+@media (min-height: 620px) { .fit .riddle { font-size: 1.12rem; } }
+@media (min-height: 720px) { .fit .riddle { font-size: 1.3rem; line-height: 1.42; } }
+.ghost.small { padding: 9px 12px; font-size: .95rem; }
+.fit .hint { padding: 9px 12px; font-size: .95rem; }
+.coderow { display: flex; gap: 8px; }
+.coderow input[type=text] { flex: 1 1 auto; min-width: 0; padding: 12px 14px; }
+.coderow .btn { width: auto; flex: none; padding: 0 20px; }
+.fit .feedback { min-height: 1.3em; font-size: .92rem; margin: 0; }
+.fit .lock { padding: 6px 12px; font-size: .92rem; margin: 0; }
+.fit .fan { max-height: 26vh; }
+.fit .grow { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 </style>
 </head>
 <body>
@@ -267,7 +310,11 @@ function fmtTime(ms) {
   return h ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}` : `${m}:${String(sec).padStart(2, "0")}`;
 }
 
+/* Screens where players type a code are sized to one phone screen, with no page scrolling. */
+function setFit(on) { app.classList.toggle("fit", on); document.documentElement.classList.toggle("fitpage", on); }
+
 function render() {
+  setFit(false);
   if (location.hash === "#host") return hostOk() ? renderHost() : renderHostLogin();
   if (!state.started) return renderStart();
   if (state.finished) return renderDone();
@@ -313,25 +360,32 @@ function renderClue() {
   const i = state.step, s = stopAt(i);
   const usedHint = state.hints.includes(i);
   const locked = lockLeft() > 0;
+  setFit(true);
   app.innerHTML = `
-    <header class="racebar">
-      <span class="eyebrow">${esc(state.team)}</span>
-      <span class="clockbox"><span class="l">Race time</span><span id="clock">${fmtTime(Date.now() - state.started)}</span></span>
+    <header class="statusrow">
+      <div class="mini">${fan(i)}</div>
+      <div class="statustext">
+        <span class="teamname">${esc(state.team)}</span>
+        <span class="eyebrow">Clue ${i + 1} of ${N}${i === N - 1 ? " · Final!" : ""}</span>
+        <span class="muted penalty">Hints: <b>${state.hints.length}</b> · Penalty: <b>${state.hints.length * HUNT.hintLockSeconds}s</b></span>
+      </div>
+      <div class="clockcol">
+        <span class="clockbox"><span class="l">Race time</span><span id="clock">${fmtTime(Date.now() - state.started)}</span></span>
+        <button class="link tiny" type="button" id="quit">Start over</button>
+      </div>
     </header>
-    <p class="muted penalty">Hints taken: <b>${state.hints.length}</b> · lockout penalties: <b>${state.hints.length * HUNT.hintLockSeconds}s</b></p>
-    ${fan(i)}
-    <section class="card">
-      <span class="eyebrow">Clue ${i + 1} of ${N}${i === N - 1 ? " · Final clue" : ""}</span>
+    <section class="card cluecard">
       <p class="riddle">${esc(s.clue)}</p>
-      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost" type="button" id="hintBtn">Get a hint (locks you out ${HUNT.hintLockSeconds} seconds)</button>`}
+      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost small" type="button" id="hintBtn">Get a hint (${HUNT.hintLockSeconds}-second lockout)</button>`}
     </section>
-    <form class="card" id="codeForm">
-      <label for="codeInput">Code word from the sticky note</label>
-      <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${locked ? "Locked for your hint…" : "Type the code word"}" ${locked ? "disabled" : ""}>
-      ${locked ? `<p class="lock" id="lock" aria-live="polite">Hint penalty: code box unlocks in <b id="lockSecs">${Math.ceil(lockLeft() / 1000)}</b>s</p>` : `<p class="feedback" id="fb" aria-live="polite"></p>`}
-      <button class="btn" type="submit" ${locked ? "disabled" : ""}>Check code</button>
-    </form>
-    <footer><button class="link" type="button" id="quit">Start over</button></footer>`;
+    <form class="card codecard" id="codeForm">
+      <label for="codeInput" class="codelabel">Code word from the sticky note</label>
+      <div class="coderow">
+        <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${locked ? "Locked…" : "Code word"}" ${locked ? "disabled" : ""}>
+        <button class="btn" type="submit" ${locked ? "disabled" : ""}>Check</button>
+      </div>
+      ${locked ? `<p class="lock" id="lock" aria-live="polite">Hint penalty: unlocks in <b id="lockSecs">${Math.ceil(lockLeft() / 1000)}</b>s</p>` : `<p class="feedback" id="fb" aria-live="polite"></p>`}
+    </form>`;
   const hb = document.getElementById("hintBtn");
   if (hb) hb.onclick = () => { state.hints.push(i); state.lockUntil = Date.now() + LOCK_MS; save(); render(); };
   document.getElementById("codeForm").onsubmit = e => {
@@ -372,6 +426,7 @@ function renderReset() {
 function renderFound() {
   const i = state.step - 1, s = stopAt(i);
   const last = state.step >= N;
+  setFit(true);
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:6px">
       <span class="eyebrow">Feather ${state.step} of ${N} recovered</span>
@@ -412,7 +467,15 @@ function renderDone() {
 
 function renderHost() {
   const rows = HUNT.stops.map((s, i) => `
-    <tr><td>${i === N - 1 ? "Last" : "Any order"}</td><td>${esc(s.place)}</td><td class="code">${esc(norm(s.code))}</td></tr>`).join("");
+    <li class="stopcard">
+      <div class="stophead">
+        <span class="eyebrow">${i === N - 1 ? "Final stop · always last" : `Stop ${i + 1} · shuffled`}</span>
+        <span class="code">${esc(norm(s.code))}</span>
+      </div>
+      <p class="place">${esc(s.place)}</p>
+      <p class="riddle-sm">${esc(s.clue)}</p>
+      <p class="hint-sm"><b>Hint:</b> ${esc(s.hint)}</p>
+    </li>`).join("");
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
       <span class="eyebrow">Host setup</span>
@@ -429,12 +492,8 @@ function renderHost() {
         <li>Wait at the dining table. The first team to arrive with the finish screen showing wins.</li>
       </ol>
     </section>
-    <div class="card tablebox">
-      <table class="sheet">
-        <thead><tr><th>When</th><th>Hide the note at</th><th>Write this code</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+    <p class="muted">Each card shows where to hide the note, the code to write on it, and the exact riddle players will read.</p>
+    <ol class="stoplist">${rows}</ol>
     <div class="row">
       <button class="btn" type="button" id="back">Back to the game</button>
       <button class="ghost" type="button" id="lockHost">Lock host sheet</button>
