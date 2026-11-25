@@ -17,7 +17,7 @@ Scan the code with a phone camera to open the game. For a full-page sign to prin
 3. The host says **Go** and every team taps **Start the hunt** at the same moment.
 4. Each team gets the first 9 clues in its own shuffled order, so teams don't follow each other around the house. The last clue always leads to the dining table.
 5. At each spot, the team finds the sticky note and types in its code word to unlock the next clue.
-6. Stuck? **Get a hint** shows a hint but locks that team's code box for 15 seconds.
+6. Stuck? **Get a hint** shows a hint but locks that team's code box for 15 seconds. Still stuck after the hint? **Show the code word** gives away the answer for another 30-second lockout.
 7. Every phone shows a live race timer and that team's hint penalties.
 8. The first team to reach the dining table with the finish screen showing wins.
 
@@ -37,6 +37,7 @@ Everything you'd want to change is in the `HUNT` block near the top of the `<scr
 | `prize` | Text shown on the finish screen. |
 | `hostCode` | The code that opens the host sheet. |
 | `hintLockSeconds` | How long a hint locks the code box. |
+| `revealLockSeconds` | How much more lockout showing the code word adds. |
 
 Commit the change to `main` and GitHub Pages republishes the site in about a minute. Anyone with the game already open needs to refresh the page.
 

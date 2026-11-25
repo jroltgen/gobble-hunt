@@ -163,10 +163,12 @@ html.fitpage, html.fitpage body { height: 100%; overflow: hidden; }
 .fit .card { padding: 14px 16px; gap: 10px; border-radius: 16px; }
 .fit .cluecard { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
 .fit .riddle { font-size: .95rem; line-height: 1.38; }
-@media (min-height: 620px) { .fit .riddle { font-size: 1.12rem; } }
+@media (min-height: 655px) { .fit .riddle { font-size: 1.12rem; } }
 @media (min-height: 720px) { .fit .riddle { font-size: 1.3rem; line-height: 1.42; } }
-.ghost.small { padding: 9px 12px; font-size: .95rem; }
-.fit .hint { padding: 9px 12px; font-size: .95rem; }
+.ghost.small { padding: 7px 12px; font-size: .92rem; }
+.fit .hint { padding: 7px 12px; font-size: .92rem; line-height: 1.4; }
+.fit .cluecard { gap: 8px; }
+.hint.reveal .code { font: 800 1.1rem var(--display); color: var(--gold); letter-spacing: .06em; }
 .coderow { display: flex; gap: 8px; }
 .coderow input[type=text] { flex: 1 1 auto; min-width: 0; padding: 12px 14px; }
 .coderow .btn { width: auto; flex: none; padding: 0 20px; }
@@ -192,6 +194,7 @@ const HUNT = {
   prize: "Race to the dining table and show the host this screen. The first team there wins!",
   hostCode: "GRAVYBOAT",   // code the host types to open the setup sheet
   hintLockSeconds: 15,     // taking a hint locks the code box this long
+  revealLockSeconds: 30,   // showing the code word adds this much more lockout
   stops: [
     { place: "Refrigerator (stick the note inside the door)",
       clue: "I'm cold inside but full of cheer,\nthe pumpkin pie is waiting here.\nOpen me up and take a peek,\na secret code word is what you seek.",
@@ -210,7 +213,7 @@ const HUNT = {
       fact: "Ripe cranberries bounce. Growers sort them by bouncing them over little barriers, and the duds don't make it over." },
     { place: "On the front of the TV (stick it on the screen or the front frame)",
       clue: "Touchdown! Fumble! Kick it through!\nThe parade and the game both play on you.\nI'm a big black screen that everyone stares at.\nThe code is right on my face, just like that.",
-      hint: "Where does everyone watch the football game? Look at the front, no need to reach behind.",
+      hint: "Where everyone watches football. It's on the front.",
       code: "TOUCHDOWN",
       fact: "The NFL has played games on Thanksgiving since the league's first season in 1920. The Detroit Lions have hosted one nearly every year since 1934." },
     { place: "Bathroom mirror",
@@ -251,6 +254,10 @@ const KEY = "gobble-hunt-v1";
 const HOST_KEY = "gobble-hunt-host";
 const N = HUNT.stops.length;
 const LOCK_MS = HUNT.hintLockSeconds * 1000;
+const REVEAL_MS = HUNT.revealLockSeconds * 1000;
+const reveals = () => Array.isArray(state.reveals) ? state.reveals : [];
+const helpCount = () => state.hints.length + reveals().length;
+const penaltySecs = () => state.hints.length * HUNT.hintLockSeconds + reveals().length * HUNT.revealLockSeconds;
 const lockLeft = () => Math.max(0, (state.lockUntil || 0) - Date.now());
 function hostOk() { try { return localStorage.getItem(HOST_KEY) === "1"; } catch (e) { return ui.host === true; } }
 function setHost(on) { ui.host = on; try { on ? localStorage.setItem(HOST_KEY, "1") : localStorage.removeItem(HOST_KEY); } catch (e) {} }
@@ -272,7 +279,7 @@ function stopAt(i) {
   const o = Array.isArray(state.order) && state.order.length === N ? state.order : [...Array(N).keys()];
   return HUNT.stops[o[i]];
 }
-function fresh() { return { team: "", step: 0, started: null, finished: null, hints: [], order: makeOrder() }; }
+function fresh() { return { team: "", step: 0, started: null, finished: null, hints: [], reveals: [], order: makeOrder() }; }
 function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && typeof s.step === "number" ? s : null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
@@ -340,7 +347,7 @@ function renderStart() {
         <li>Read the riddle and go find the spot it describes.</li>
         <li>Look for a sticky note with a code word on it.</li>
         <li>Type the code word into your phone to unlock the next clue.</li>
-        <li>Stuck? Tap Get a hint, but your code box locks for ${HUNT.hintLockSeconds} seconds.</li>
+        <li>Stuck? Tap Get a hint, but your code box locks for ${HUNT.hintLockSeconds} seconds. Still stuck after that? You can show the code word for another ${HUNT.revealLockSeconds}-second lockout.</li>
         <li>Leave each note where you found it for the next team.</li>
         <li>Wait for the host to say Go, then everyone taps Start at once. First team back to the dining table wins!</li>
       </ol>
@@ -349,7 +356,7 @@ function renderStart() {
   document.getElementById("startForm").onsubmit = e => {
     e.preventDefault();
     state.team = document.getElementById("teamInput").value.trim() || "Team Turkey";
-    state.started = Date.now(); state.step = 0; state.hints = []; state.finished = null; state.order = makeOrder(); state.lockUntil = 0;
+    state.started = Date.now(); state.step = 0; state.hints = []; state.reveals = []; state.finished = null; state.order = makeOrder(); state.lockUntil = 0;
     save(); render(); scrollTo(0, 0);
   };
   document.getElementById("hostLink").onclick = () => { location.hash = "host"; };
@@ -358,7 +365,13 @@ function renderStart() {
 function renderClue() {
   const i = state.step, s = stopAt(i);
   const usedHint = state.hints.includes(i);
+  const usedReveal = reveals().includes(i);
   const locked = lockLeft() > 0;
+  const helpArea = !usedHint
+    ? `<button class="ghost small" type="button" id="hintBtn">Get a hint (${HUNT.hintLockSeconds}-second lockout)</button>`
+    : `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` + (usedReveal
+      ? `<p class="hint reveal"><b>Code word:</b> <span class="code">${esc(norm(s.code))}</span></p>`
+      : `<button class="ghost small" type="button" id="revealBtn">Show the code word (${HUNT.revealLockSeconds}-second lockout)</button>`);
   setFit(true);
   app.innerHTML = `
     <header class="statusrow">
@@ -366,7 +379,7 @@ function renderClue() {
       <div class="statustext">
         <span class="teamname">${esc(state.team)}</span>
         <span class="eyebrow">Clue ${i + 1} of ${N}${i === N - 1 ? " · Final!" : ""}</span>
-        <span class="muted penalty">Hints: <b>${state.hints.length}</b> · Penalty: <b>${state.hints.length * HUNT.hintLockSeconds}s</b></span>
+        <span class="muted penalty">Hints: <b>${helpCount()}</b> · Penalty: <b>${penaltySecs()}s</b></span>
       </div>
       <div class="clockcol">
         <span class="clockbox"><span class="l">Race time</span><span id="clock">${fmtTime(Date.now() - state.started)}</span></span>
@@ -375,7 +388,7 @@ function renderClue() {
     </header>
     <section class="card cluecard">
       <p class="riddle">${esc(s.clue)}</p>
-      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost small" type="button" id="hintBtn">Get a hint (${HUNT.hintLockSeconds}-second lockout)</button>`}
+      ${helpArea}
     </section>
     <form class="card codecard" id="codeForm">
       <label for="codeInput" class="codelabel">Code word from the sticky note</label>
@@ -383,10 +396,13 @@ function renderClue() {
         <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${locked ? "Locked…" : "Code word"}" ${locked ? "disabled" : ""}>
         <button class="btn" type="submit" ${locked ? "disabled" : ""}>Check</button>
       </div>
-      ${locked ? `<p class="lock" id="lock" aria-live="polite">Hint penalty: unlocks in <b id="lockSecs">${Math.ceil(lockLeft() / 1000)}</b>s</p>` : `<p class="feedback" id="fb" aria-live="polite"></p>`}
+      ${locked ? `<p class="lock" id="lock" aria-live="polite">${usedReveal ? "Code penalty" : "Hint penalty"}: unlocks in <b id="lockSecs">${Math.ceil(lockLeft() / 1000)}</b>s</p>` : `<p class="feedback" id="fb" aria-live="polite"></p>`}
     </form>`;
   const hb = document.getElementById("hintBtn");
   if (hb) hb.onclick = () => { state.hints.push(i); state.lockUntil = Date.now() + LOCK_MS; save(); render(); };
+  const rb = document.getElementById("revealBtn");
+  // Revealing adds its lockout on top of any hint lockout still running.
+  if (rb) rb.onclick = () => { state.reveals = [...reveals(), i]; state.lockUntil = Math.max(Date.now(), state.lockUntil || 0) + REVEAL_MS; save(); render(); };
   document.getElementById("codeForm").onsubmit = e => {
     e.preventDefault();
     if (lockLeft() > 0) return;
@@ -453,12 +469,12 @@ function renderDone() {
     ${fan(N)}
     <div class="stats">
       <div class="stat"><div class="n">${fmtTime(total)}</div><div class="l">Final time</div></div>
-      <div class="stat"><div class="n">${state.hints.length}</div><div class="l">Hints used</div></div>
+      <div class="stat"><div class="n">${helpCount()}</div><div class="l">Hints used</div></div>
     </div>
     <section class="card">
       <h3>Show this screen to the host</h3>
       <p>${esc(HUNT.prize)}</p>
-      <p class="muted">Your time includes ${state.hints.length * HUNT.hintLockSeconds} seconds locked out for hints.</p>
+      <p class="muted">Your time includes ${penaltySecs()} seconds locked out for hints.</p>
     </section>
     <button class="ghost" type="button" id="again">Play again with a new team</button>`;
   document.getElementById("again").onclick = () => { state = fresh(); save(); render(); scrollTo(0, 0); };
@@ -487,7 +503,7 @@ function renderHost() {
         <li>Send everyone the link to this page. Each phone (or team) plays on its own.</li>
         <li>Each team gets the first ${N - 1} stops in a different shuffled order. The last stop is always last.</li>
         <li>Gather everyone, shout Go, and have every team tap Start the hunt at the same moment.</li>
-        <li>Taking a hint locks that team's code box for ${HUNT.hintLockSeconds} seconds.</li>
+        <li>Taking a hint locks that team's code box for ${HUNT.hintLockSeconds} seconds. After a hint, a team can also show the code word for another ${HUNT.revealLockSeconds}-second lockout.</li>
         <li>Wait at the dining table. The first team to arrive with the finish screen showing wins.</li>
       </ol>
     </section>
