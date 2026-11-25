@@ -14,7 +14,7 @@ Scan the code with a phone camera to open the game. For a full-page sign to prin
 
 1. The host hides 10 sticky notes around the house, each with a code word written on it.
 2. Each team opens the game on a phone and enters a team name.
-3. The host says **Go** and every team taps **Start the hunt** at the same moment.
+3. Nobody can start early: the host says **Go** and announces the start code (shown on the host sheet), and each team types it in to tap **Start the hunt**.
 4. Each team gets the first 9 clues in its own shuffled order, so teams don't follow each other around the house. The last clue always leads to the dining table.
 5. At each spot, the team finds the sticky note and types in its code word to unlock the next clue.
 6. Stuck? **Get a hint** shows a hint but locks that team's code box for 15 seconds. Still stuck after the hint? **Show the code word** gives away the answer for another 30-second lockout.
@@ -38,6 +38,7 @@ Everything you'd want to change is in the `HUNT` block near the top of the `<scr
 | `stops` | The 10 stops. Each has a `place` (shown only on the host sheet), a `clue`, a `hint`, a `code`, and a trivia `fact`. The last stop is always the final one. |
 | `prize` | Text shown on the finish screen. |
 | `hostCode` | The code that opens the host sheet. |
+| `startCode` | The code the host announces at Go. Teams need it to start. |
 | `hintLockSeconds` | How long a hint locks the code box. |
 | `revealLockSeconds` | How much more lockout showing the code word adds. |
 

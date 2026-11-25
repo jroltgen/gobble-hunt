@@ -75,6 +75,8 @@ input[type=text]::placeholder { color: var(--muted); opacity: .6; letter-spacing
 input[type=text]:focus { outline: none; border-color: var(--gold); }
 #codeInput { text-transform: uppercase; }
 #codeInput::placeholder { text-transform: none; }
+#startInput { text-transform: uppercase; }
+#startInput::placeholder { text-transform: none; }
 .btn {
   appearance: none; border: 0; cursor: pointer;
   font: 800 1.1rem var(--display);
@@ -133,6 +135,9 @@ footer { text-align: center; font-size: .9rem; }
 .penalty b { color: var(--fg); }
 .lock { background: var(--cranberry); color: var(--fg); border-radius: 12px; padding: 10px 14px; font-weight: 700; }
 .lock b { font-variant-numeric: tabular-nums; }
+
+.startcode { gap: 6px; border-color: var(--gold); }
+.startcode .code { font: 800 2rem var(--display); color: var(--gold); letter-spacing: .06em; }
 
 /* host sheet stop cards */
 .stoplist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -193,6 +198,7 @@ const HUNT = {
   title: "The Great Gobble Hunt",
   prize: "You found all 10 feathers and finished the Great Gobble Hunt. Happy Thanksgiving!",
   hostCode: "GRAVYBOAT",   // code the host types to open the setup sheet
+  startCode: "LETSGOBBLE", // the host announces this at Go; nobody can start without it
   hintLockSeconds: 15,     // taking a hint locks the code box this long
   revealLockSeconds: 30,   // showing the code word adds this much more lockout
   stops: [
@@ -232,7 +238,7 @@ const HUNT = {
       code: "HARVEST",
       fact: "Sarah Josepha Hale wrote letters for 17 years asking for a national Thanksgiving. President Lincoln finally proclaimed one in 1863." },
     { place: "Under the front doormat",
-      clue: "Every guest who came today\nwiped their shoes on me on the way.\nI say WELCOME but I lie flat.\nPeek beneath the thing like that.",
+      clue: "Every guest who came today\nwiped their shoes on me on the way.\nI say HELLO but I lie flat.\nPeek beneath the thing like that.",
       hint: "Look down by the front door.",
       code: "MAYFLOWER",
       fact: "The Mayflower's crossing to America in 1620 took 66 days." },
@@ -339,6 +345,9 @@ function renderStart() {
     <form class="card" id="startForm">
       <label for="teamInput">Your team name</label>
       <input type="text" id="teamInput" maxlength="30" placeholder="e.g. The Drumsticks" autocomplete="off" value="${esc(state.team)}">
+      <label for="startInput">Start code</label>
+      <input type="text" id="startInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Announced when the host says Go">
+      <p class="feedback" id="startFb" aria-live="polite"></p>
       <button class="btn" type="submit">Start the hunt</button>
     </form>
     <div class="card">
@@ -349,12 +358,20 @@ function renderStart() {
         <li>Type the code word into your phone to unlock the next clue.</li>
         <li>Stuck? Tap Get a hint, but your code box locks for ${HUNT.hintLockSeconds} seconds. Still stuck after that? You can show the code word for another ${HUNT.revealLockSeconds}-second lockout.</li>
         <li>Leave each note where you found it for the next team.</li>
-        <li>Wait for the host to say Go, then everyone taps Start at once. First team back to the dining table wins!</li>
+        <li>Enter your team name now. When the host says Go, they'll announce the start code. Type it in and tap Start. First team back to the dining table wins!</li>
       </ol>
     </div>
     <footer><button class="link" type="button" id="hostLink">Host setup (no peeking, players!)</button></footer>`;
   document.getElementById("startForm").onsubmit = e => {
     e.preventDefault();
+    const startInput = document.getElementById("startInput");
+    if (norm(startInput.value) !== norm(HUNT.startCode)) {
+      const fb = document.getElementById("startFb");
+      fb.className = "feedback bad";
+      fb.textContent = norm(startInput.value) ? "That's not the start code. Wait for the host to announce it." : "Wait for the host to say Go and announce the start code.";
+      startInput.classList.remove("shake"); void startInput.offsetWidth; startInput.classList.add("shake");
+      return;
+    }
     state.team = document.getElementById("teamInput").value.trim() || "Team Turkey";
     state.started = Date.now(); state.step = 0; state.hints = []; state.reveals = []; state.finished = null; state.order = makeOrder(); state.lockUntil = 0;
     save(); render(); scrollTo(0, 0);
@@ -496,13 +513,17 @@ function renderHost() {
       <span class="eyebrow">Host setup</span>
       <h2>Hide these sticky notes before the guests play</h2>
     </header>
+    <section class="card startcode">
+      <span class="eyebrow">Start code · announce it when you say Go</span>
+      <span class="code">${esc(norm(HUNT.startCode))}</span>
+    </section>
     <section class="card">
       <ol class="how">
         <li>Write each code word in big letters on its own sticky note.</li>
         <li>Hide each note at its spot. Players only see the riddles, never this list.</li>
         <li>Send everyone the link to this page. Each phone (or team) plays on its own.</li>
         <li>Each team gets the first ${N - 1} stops in a different shuffled order. The last stop is always last.</li>
-        <li>Gather everyone, shout Go, and have every team tap Start the hunt at the same moment.</li>
+        <li>Have every team enter its name. Nobody can start until you announce the start code below. Shout Go and the code together.</li>
         <li>Taking a hint locks that team's code box for ${HUNT.hintLockSeconds} seconds. After a hint, a team can also show the code word for another ${HUNT.revealLockSeconds}-second lockout.</li>
         <li>Wait at the dining table. The first team to arrive with the finish screen showing wins.</li>
       </ol>
