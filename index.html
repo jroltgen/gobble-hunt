@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Great Gobble Hunt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one narrow column, a phone held in one hand; the turkey's tail fills in as clues are found.
+   Single deliberate look: an evening harvest table (dark plum-brown wood, candle gold, cranberry). */
+:root {
+  color-scheme: dark;
+  --bg: #2a1a1f;
+  --panel: #3a252b;
+  --panel-2: #4a3037;
+  --fg: #f7ead9;
+  --muted: #c9b2a2;
+  --gold: #f2b544;
+  --pumpkin: #e8743b;
+  --cranberry: #c8324f;
+  --sage: #8fb48a;
+  --line: #5c4048;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  background-image: radial-gradient(120% 60% at 50% 0%, #3d2329 0%, var(--bg) 60%);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 20px;
+}
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.05; }
+h1 { font-size: clamp(2.4rem, 11vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+h1 em { font-style: normal; color: var(--gold); }
+h2 { font-size: 1.6rem; font-weight: 800; }
+p { margin: 0; }
+.eyebrow { font-family: var(--display); font-weight: 500; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pumpkin); }
+.muted { color: var(--muted); }
+.fan { width: 100%; max-width: 100%; height: auto; display: block; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.riddle { font-size: 1.3rem; line-height: 1.45; font-weight: 700; white-space: pre-line; }
+label { font-weight: 700; font-size: .95rem; }
+input[type=text] {
+  width: 100%;
+  font: 700 1.25rem var(--display);
+  letter-spacing: .08em;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+}
+input[type=text]::placeholder { color: var(--muted); opacity: .6; letter-spacing: 0; font-family: var(--body); font-weight: 400; font-size: 1rem; }
+input[type=text]:focus { outline: none; border-color: var(--gold); }
+#codeInput { text-transform: uppercase; }
+.btn {
+  appearance: none; border: 0; cursor: pointer;
+  font: 800 1.1rem var(--display);
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--gold); color: #2a1a1f;
+  width: 100%;
+  transition: transform .08s ease, filter .15s ease;
+}
+.btn:active { transform: scale(.98); }
+.btn:focus-visible, .link:focus-visible, .ghost:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+.ghost {
+  appearance: none; cursor: pointer;
+  font: 700 1rem var(--body);
+  padding: 12px 16px; border-radius: 12px;
+  background: transparent; color: var(--fg);
+  border: 2px solid var(--line);
+  width: 100%;
+}
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; }
+.feedback { min-height: 1.5em; font-weight: 700; }
+.feedback.bad { color: #ff8b9d; }
+.hint { background: var(--panel-2); border-radius: 12px; padding: 12px 14px; color: var(--fg); }
+.hint b { color: var(--gold); }
+.stats { display: flex; gap: 10px; }
+.stat { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: center; }
+.stat .n { font: 800 1.6rem var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.stat .l { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.fact { border-left: 4px solid var(--sage); padding: 4px 0 4px 14px; }
+.fact .eyebrow { color: var(--sage); }
+ol.how { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.link { color: var(--muted); background: none; border: 0; font: inherit; text-decoration: underline; cursor: pointer; padding: 6px; }
+footer { text-align: center; font-size: .9rem; }
+.pop { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+@keyframes pop { from { transform: scale(.85); } to { transform: scale(1); } }
+.shake { animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+@media (prefers-reduced-motion: reduce) { .pop, .shake { animation: none; } .btn { transition: none; } }
+
+/* host sheet */
+.sheet { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.sheet th, .sheet td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.sheet th { font-family: var(--display); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sheet .code { font: 800 1rem var(--display); color: var(--gold); letter-spacing: .06em; }
+.tablebox { overflow-x: auto; }
+.confirm { display: flex; gap: 10px; flex-wrap: wrap; }
+.confirm > * { flex: 1 1 120px; }
+.danger { background: var(--cranberry); color: var(--fg); }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+/* =========================================================================
+   EDIT YOUR HUNT HERE
+   Each stop: where you hide the sticky note, the clue players read, a hint,
+   and the CODE WORD you write on the sticky note at that spot.
+   The first clue leads to stop 1, and so on. Codes ignore upper/lower case.
+   ========================================================================= */
+const HUNT = {
+  title: "The Great Gobble Hunt",
+  prize: "Head back to the dining table and tell the host the final word. Your prize is waiting!",
+  stops: [
+    { place: "Refrigerator (stick the note inside the door)",
+      clue: "I'm cold inside but full of cheer,\nthe pumpkin pie is waiting here.\nOpen me up and take a peek,\nthe first code word is what you seek.",
+      hint: "It hums in the kitchen and keeps the leftovers cold.",
+      code: "PILGRIM",
+      fact: "The 1621 harvest feast in Plymouth lasted three days, and about 90 Wampanoag guests outnumbered the roughly 50 colonists." },
+    { place: "Oven door or microwave",
+      clue: "The turkey spent all morning in my belly,\nnow I'm warm and smell like jelly.\nI beep, I bake, I roast, I heat.\nFind me where the cooks all meet.",
+      hint: "Where did the turkey get cooked?",
+      code: "GRAVY",
+      fact: "Wild turkeys can run about 25 miles per hour and fly in short bursts. The farm-raised kind are too heavy to fly." },
+    { place: "Under a couch cushion",
+      clue: "After dinner, Grandpa sinks into me.\nLost coins and crumbs are all you'll see.\nLift my cushions, have a look,\nthis is where the nap gets took.",
+      hint: "The comfiest seat in the living room.",
+      code: "CRANBERRY",
+      fact: "Ripe cranberries bounce. Growers sort them by bouncing them over little barriers, and the duds don't make it over." },
+    { place: "TV remote or the TV stand",
+      clue: "Touchdown! Fumble! Kick it through!\nThe big game's on, the score is new.\nI change the channel with a click.\nFind the thing that does the trick.",
+      hint: "You'd need it to switch to the football game.",
+      code: "TOUCHDOWN",
+      fact: "The NFL has played games on Thanksgiving since the league's first season in 1920. The Detroit Lions have hosted one nearly every year since 1934." },
+    { place: "Bathroom mirror",
+      clue: "Look at me and you'll see you,\nwith cranberry sauce on your chin, it's true.\nWash your hands and check your face,\nthe next code hides in this shiny place.",
+      hint: "Where do you check for food on your face?",
+      code: "GOBBLE",
+      fact: "Only male turkeys (toms) gobble. Hens make a clucking sound instead." },
+    { place: "Washing machine or dryer",
+      clue: "Spill some gravy? Stain your shirt?\nBring it here to lose the dirt.\nI spin and tumble, round and round.\nIn the laundry, I'll be found.",
+      hint: "Where do dirty napkins and tablecloths go?",
+      code: "ACORN",
+      fact: "The Butterball Turkey Talk-Line has answered cooks' panicked questions every November since 1981." },
+    { place: "Bookshelf",
+      clue: "I'm full of stories, old and new,\nof pilgrims, ships, and recipes too.\nMy spines are lined up in a row.\nThe next clue's tucked where readers go.",
+      hint: "Lots of covers and pages, all standing up.",
+      code: "HARVEST",
+      fact: "Sarah Josepha Hale wrote letters for 17 years asking for a national Thanksgiving. President Lincoln finally proclaimed one in 1863." },
+    { place: "Under the front doormat",
+      clue: "Every guest who came today\nwiped their shoes on me on the way.\nI say WELCOME but I lie flat.\nPeek beneath the thing like that.",
+      hint: "Look down by the front door.",
+      code: "MAYFLOWER",
+      fact: "The Mayflower's crossing to America in 1620 took 66 days." },
+    { place: "Under the piano",
+      clue: "I've got black keys and white keys too,\nbut none of them will open a door for you.\nPlay a song for the after-dinner crowd,\nthen crawl beneath me, I'm big and loud.",
+      hint: "It makes music, and somebody has to practice it.",
+      code: "NAPTIME",
+      fact: "Turkey doesn't have much more tryptophan than chicken. The after-dinner drowsiness mostly comes from eating a huge meal." },
+    { place: "Underneath the dining table (tape it to the underside)",
+      clue: "Last stop! Where we all sat down\nto pass the rolls and gravy around.\nDropped napkins and crumbs land under me, that's all.\nDuck down low to find the last word of all!",
+      hint: "Where everybody ate dinner. Look beneath it, not on top.",
+      code: "THANKFUL",
+      fact: "Macy's first Thanksgiving Day Parade marched through New York in 1924, and the big balloons first appeared in 1927." }
+  ]
+};
+/* ========================================================================= */
+
+const KEY = "gobble-hunt-v1";
+const N = HUNT.stops.length;
+const app = document.getElementById("app");
+const norm = s => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let state = load() || fresh();
+let ui = { justFound: false, wrong: 0, confirmReset: false };
+
+function fresh() { return { team: "", step: 0, started: null, finished: null, hints: [], }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && typeof s.step === "number" ? s : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+/* Turkey tail fan: one feather per stop, colored as each is found. */
+function fan(found) {
+  const cols = ["#c8324f", "#e8743b", "#f2b544", "#8fb48a", "#b5542f"];
+  const cx = 200, cy = 190, r = 150, start = 200, end = 340;
+  let feathers = "";
+  for (let i = 0; i < N; i++) {
+    const a = (start + (end - start) * (N === 1 ? .5 : i / (N - 1))) * Math.PI / 180;
+    const deg = a * 180 / Math.PI + 90;
+    const x = cx + Math.cos(a) * r * .55, y = cy + Math.sin(a) * r * .55;
+    const on = i < found;
+    feathers += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${deg.toFixed(1)})">
+      <ellipse cx="0" cy="0" rx="17" ry="66" fill="${on ? cols[i % cols.length] : "#4a3037"}" stroke="${on ? "#2a1a1f" : "#5c4048"}" stroke-width="2" ${on && i === found - 1 && ui.justFound ? 'class="pop"' : ""}/>
+      <line x1="0" y1="-56" x2="0" y2="56" stroke="${on ? "#2a1a1f" : "#5c4048"}" stroke-width="1.5" opacity=".5"/>
+    </g>`;
+  }
+  return `<svg class="fan" viewBox="0 0 400 230" role="img" aria-label="Turkey tail: ${found} of ${N} feathers found">
+    ${feathers}
+    <ellipse cx="200" cy="188" rx="58" ry="46" fill="#7a4a2e"/>
+    <circle cx="200" cy="128" r="30" fill="#8c5634"/>
+    <circle cx="190" cy="122" r="4.5" fill="#f7ead9"/><circle cx="210" cy="122" r="4.5" fill="#f7ead9"/>
+    <circle cx="190" cy="123" r="2.2" fill="#2a1a1f"/><circle cx="210" cy="123" r="2.2" fill="#2a1a1f"/>
+    <path d="M193 133 L207 133 L200 145 Z" fill="#f2b544"/>
+    <path d="M203 140 q8 6 2 20 q-6 -6 -6 -14 z" fill="#c8324f"/>
+    <text x="200" y="200" text-anchor="middle" font-family="Bricolage Grotesque, system-ui, sans-serif" font-weight="800" font-size="24" fill="#f7ead9">${found}/${N}</text>
+  </svg>`;
+}
+
+function fmtTime(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}` : `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function render() {
+  if (location.hash === "#host") return renderHost();
+  if (!state.started) return renderStart();
+  if (state.finished) return renderDone();
+  if (ui.justFound) return renderFound();
+  renderClue();
+}
+
+function renderStart() {
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:8px">
+      <span class="eyebrow">Thanksgiving scavenger hunt</span>
+      <h1>The Great <em>Gobble</em> Hunt</h1>
+    </header>
+    ${fan(0)}
+    <p>The turkey lost all ${N} tail feathers somewhere in this house. Solve each riddle, find the hidden sticky note, and type its code word to win a feather back.</p>
+    <form class="card" id="startForm">
+      <label for="teamInput">Your team name</label>
+      <input type="text" id="teamInput" maxlength="30" placeholder="e.g. The Drumsticks" autocomplete="off" value="${esc(state.team)}">
+      <button class="btn" type="submit">Start the hunt</button>
+    </form>
+    <div class="card">
+      <h3>How to play</h3>
+      <ol class="how">
+        <li>Read the riddle and go find the spot it describes.</li>
+        <li>Look for a sticky note with a code word on it.</li>
+        <li>Type the code word into your phone to unlock the next clue.</li>
+        <li>Stuck? Tap Get a hint. Hints add 1 minute to your time.</li>
+        <li>Leave each note where you found it for the next team.</li>
+      </ol>
+    </div>
+    <footer><button class="link" type="button" id="hostLink">Host setup (no peeking, players!)</button></footer>`;
+  document.getElementById("startForm").onsubmit = e => {
+    e.preventDefault();
+    state.team = document.getElementById("teamInput").value.trim() || "Team Turkey";
+    state.started = Date.now(); state.step = 0; state.hints = []; state.finished = null;
+    save(); render(); scrollTo(0, 0);
+  };
+  document.getElementById("hostLink").onclick = () => { location.hash = "host"; };
+}
+
+function renderClue() {
+  const i = state.step, s = HUNT.stops[i];
+  const usedHint = state.hints.includes(i);
+  app.innerHTML = `
+    <header style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span class="eyebrow">${esc(state.team)}</span>
+      <span class="muted" style="font-variant-numeric:tabular-nums">⏱ <span id="clock">${fmtTime(Date.now() - state.started + state.hints.length * 60000)}</span></span>
+    </header>
+    ${fan(i)}
+    <section class="card">
+      <span class="eyebrow">Clue ${i + 1} of ${N}</span>
+      <p class="riddle">${esc(s.clue)}</p>
+      ${usedHint ? `<p class="hint"><b>Hint:</b> ${esc(s.hint)}</p>` : `<button class="ghost" type="button" id="hintBtn">Get a hint (+1 minute)</button>`}
+    </section>
+    <form class="card" id="codeForm">
+      <label for="codeInput">Code word from the sticky note</label>
+      <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Type the code word">
+      <p class="feedback" id="fb" aria-live="polite"></p>
+      <button class="btn" type="submit">Check code</button>
+    </form>
+    <footer><button class="link" type="button" id="quit">Start over</button></footer>`;
+  const hb = document.getElementById("hintBtn");
+  if (hb) hb.onclick = () => { state.hints.push(i); save(); render(); };
+  document.getElementById("codeForm").onsubmit = e => {
+    e.preventDefault();
+    const input = document.getElementById("codeInput");
+    const fb = document.getElementById("fb");
+    if (!norm(input.value)) { fb.className = "feedback bad"; fb.textContent = "Type the word from the sticky note first."; return; }
+    if (norm(input.value) === norm(s.code)) {
+      state.step++;
+      if (state.step >= N) state.finished = Date.now();
+      ui.justFound = true; save(); render(); scrollTo(0, 0);
+    } else {
+      ui.wrong++;
+      const msgs = ["Not quite. Check the spelling on the note.", "Nope! Are you at the right spot?", "That's not it. Maybe try a hint?"];
+      fb.className = "feedback bad"; fb.textContent = msgs[(ui.wrong - 1) % msgs.length];
+      input.classList.remove("shake"); void input.offsetWidth; input.classList.add("shake");
+      input.select();
+    }
+  };
+  document.getElementById("quit").onclick = () => { ui.confirmReset = true; renderReset(); };
+}
+
+function renderReset() {
+  app.innerHTML = `
+    <section class="card" style="margin-top:20vh">
+      <h2>Start over?</h2>
+      <p class="muted">This clears your team's progress on this phone. You'll go back to clue 1.</p>
+      <div class="confirm">
+        <button class="ghost" type="button" id="no">Keep playing</button>
+        <button class="btn danger" type="button" id="yes">Start over</button>
+      </div>
+    </section>`;
+  document.getElementById("no").onclick = () => { ui.confirmReset = false; render(); };
+  document.getElementById("yes").onclick = () => { const t = state.team; state = fresh(); state.team = t; ui.confirmReset = false; save(); render(); };
+}
+
+function renderFound() {
+  const i = state.step - 1, s = HUNT.stops[i];
+  const last = state.step >= N;
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:6px">
+      <span class="eyebrow">Feather ${state.step} of ${N} recovered</span>
+      <h2>${esc(norm(s.code))}! You got it.</h2>
+    </header>
+    ${fan(state.step)}
+    <section class="card">
+      <div class="fact">
+        <span class="eyebrow">Turkey trivia</span>
+        <p>${esc(s.fact)}</p>
+      </div>
+    </section>
+    <p class="muted">Leave the sticky note where you found it for the next team.</p>
+    <button class="btn" type="button" id="next">${last ? "See your results" : `On to clue ${state.step + 1}`}</button>`;
+  document.getElementById("next").onclick = () => { ui.justFound = false; ui.wrong = 0; render(); scrollTo(0, 0); };
+}
+
+function renderDone() {
+  const penalty = state.hints.length * 60000;
+  const total = state.finished - state.started + penalty;
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:8px">
+      <span class="eyebrow">${esc(state.team)}</span>
+      <h1>The turkey is <em>whole again!</em></h1>
+    </header>
+    ${fan(N)}
+    <div class="stats">
+      <div class="stat"><div class="n">${fmtTime(total)}</div><div class="l">Final time</div></div>
+      <div class="stat"><div class="n">${state.hints.length}</div><div class="l">Hints used</div></div>
+    </div>
+    <section class="card">
+      <h3>Show this screen to the host</h3>
+      <p>${esc(HUNT.prize)}</p>
+      <p class="muted">Final time includes ${state.hints.length} minute${state.hints.length === 1 ? "" : "s"} of hint penalty.</p>
+    </section>
+    <button class="ghost" type="button" id="again">Play again with a new team</button>`;
+  document.getElementById("again").onclick = () => { state = fresh(); save(); render(); scrollTo(0, 0); };
+}
+
+function renderHost() {
+  const rows = HUNT.stops.map((s, i) => `
+    <tr><td>${i + 1}</td><td>${esc(s.place)}</td><td class="code">${esc(norm(s.code))}</td></tr>`).join("");
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:8px">
+      <span class="eyebrow">Host setup</span>
+      <h2>Hide these sticky notes before the guests play</h2>
+    </header>
+    <section class="card">
+      <ol class="how">
+        <li>Write each code word in big letters on its own sticky note.</li>
+        <li>Hide each note at its spot. Players only see the riddles, never this list.</li>
+        <li>Send everyone the link to this page. Each phone (or team) plays on its own.</li>
+        <li>Fastest final time wins. Each hint adds 1 minute.</li>
+      </ol>
+    </section>
+    <div class="card tablebox">
+      <table class="sheet">
+        <thead><tr><th>#</th><th>Hide the note at</th><th>Write this code</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <button class="btn" type="button" id="back">Back to the game</button>`;
+  document.getElementById("back").onclick = () => { history.replaceState(null, "", location.pathname + location.search); render(); scrollTo(0, 0); };
+}
+
+window.addEventListener("hashchange", render);
+setInterval(() => {
+  const c = document.getElementById("clock");
+  if (c && state.started && !state.finished) c.textContent = fmtTime(Date.now() - state.started + state.hints.length * 60000);
+}, 1000);
+render();
+</script>
+</body>
+</html>
