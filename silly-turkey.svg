@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520" role="img" aria-label="A bald-tailed turkey in a detective hat squints through a magnifying glass at a single feather, saying: Has anyone seen my feathers?">
+  <rect width="800" height="520" rx="28" fill="#2a1a1f"/>
+  <!-- floor -->
+  <ellipse cx="360" cy="462" rx="250" ry="22" fill="#3a252b"/>
+
+  <!-- speech bubble -->
+  <g>
+    <rect x="470" y="34" width="300" height="118" rx="22" fill="#f7ead9"/>
+    <path d="M520 150 L486 196 L566 150 Z" fill="#f7ead9"/>
+    <text x="620" y="82" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-weight="700" font-size="27" fill="#2a1a1f">Has anyone seen</text>
+    <text x="620" y="122" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-weight="700" font-size="27" fill="#c8324f">my feathers?!</text>
+  </g>
+
+  <!-- the one sad feather left on the tail -->
+  <g transform="translate(262 292) rotate(-38)">
+    <ellipse cx="0" cy="-70" rx="20" ry="74" fill="#e8743b" stroke="#2a1a1f" stroke-width="4"/>
+    <line x1="0" y1="-138" x2="0" y2="0" stroke="#2a1a1f" stroke-width="3" opacity=".5"/>
+  </g>
+  <!-- empty feather sockets -->
+  <g fill="none" stroke="#5c4048" stroke-width="4" stroke-dasharray="10 9">
+    <ellipse cx="270" cy="160" rx="20" ry="70" transform="rotate(-8 270 160)"/>
+    <ellipse cx="335" cy="150" rx="20" ry="70" transform="rotate(8 335 150)"/>
+    <ellipse cx="395" cy="175" rx="20" ry="70" transform="rotate(26 395 175)"/>
+  </g>
+
+  <!-- legs -->
+  <g stroke="#f2b544" stroke-width="10" stroke-linecap="round" fill="none">
+    <path d="M300 400 L292 458 M292 458 L268 462 M292 458 L300 470 M292 458 L316 462"/>
+    <path d="M370 400 L382 458 M382 458 L358 462 M382 458 L390 470 M382 458 L406 462"/>
+  </g>
+
+  <!-- body -->
+  <ellipse cx="335" cy="330" rx="125" ry="100" fill="#7a4a2e" stroke="#2a1a1f" stroke-width="5"/>
+  <path d="M260 320 q30 40 70 30 q-40 -10 -50 -50 z" fill="#5f3822"/>
+  <!-- tiny goosebumps where feathers used to be -->
+  <g fill="#9a6440"><circle cx="250" cy="280" r="5"/><circle cx="232" cy="305" r="4"/><circle cx="262" cy="300" r="3.5"/></g>
+
+  <!-- neck + head -->
+  <path d="M400 300 q40 -50 30 -110" stroke="#8c5634" stroke-width="44" fill="none" stroke-linecap="round"/>
+  <circle cx="440" cy="190" r="50" fill="#8c5634" stroke="#2a1a1f" stroke-width="5"/>
+  <!-- detective hat -->
+  <path d="M392 160 q48 -70 100 -4 z" fill="#4a3037" stroke="#2a1a1f" stroke-width="5"/>
+  <path d="M380 162 q60 -14 124 0 q-8 12 -124 0 z" fill="#4a3037" stroke="#2a1a1f" stroke-width="5"/>
+  <rect x="412" y="134" width="60" height="10" rx="4" fill="#c8324f"/>
+  <!-- eyes: one squinting, one huge -->
+  <path d="M420 192 q10 -8 20 0" stroke="#2a1a1f" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <circle cx="465" cy="190" r="15" fill="#f7ead9" stroke="#2a1a1f" stroke-width="3"/>
+  <circle cx="470" cy="192" r="7" fill="#2a1a1f"/>
+  <circle cx="473" cy="189" r="2.5" fill="#f7ead9"/>
+  <!-- beak + wattle -->
+  <path d="M478 206 L520 214 L478 224 Z" fill="#f2b544" stroke="#2a1a1f" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M470 222 q22 20 6 52 q-18 -10 -16 -48 z" fill="#c8324f" stroke="#2a1a1f" stroke-width="4"/>
+  <!-- sweat drop -->
+  <path d="M410 168 q-10 18 0 24 q10 -6 0 -24 z" fill="#8fd0e8" stroke="#2a1a1f" stroke-width="2.5"/>
+
+  <!-- wing holding a magnifying glass -->
+  <!-- the lost feather on the floor, under the glass -->
+  <g transform="translate(628 432) rotate(70)">
+    <ellipse cx="0" cy="0" rx="15" ry="50" fill="#c8324f" stroke="#2a1a1f" stroke-width="3"/>
+    <line x1="0" y1="-46" x2="0" y2="46" stroke="#2a1a1f" stroke-width="2" opacity=".5"/>
+  </g>
+  <text x="628" y="496" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="18" fill="#c9b2a2" letter-spacing="2">EVIDENCE #1</text>
+
+  <path d="M410 330 q60 0 100 20" stroke="#5f3822" stroke-width="30" fill="none" stroke-linecap="round"/>
+  <line x1="512" y1="352" x2="560" y2="378" stroke="#2a1a1f" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="612" cy="410" r="56" fill="#f7ead9" fill-opacity=".12" stroke="#2a1a1f" stroke-width="10"/>
+  <circle cx="612" cy="410" r="56" fill="none" stroke="#f2b544" stroke-width="4"/>
+  <path d="M580 388 q10 -18 30 -20" stroke="#f7ead9" stroke-width="6" fill="none" stroke-linecap="round" opacity=".7"/>
+</svg>

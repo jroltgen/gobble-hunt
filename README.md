@@ -1,5 +1,7 @@
 # The Great Gobble Hunt
 
+<img src="silly-turkey.svg" alt="A bald-tailed turkey in a detective hat squints through a magnifying glass at a lost feather, asking: Has anyone seen my feathers?" width="600">
+
 A Thanksgiving scavenger hunt you play on your phone around the house. Teams solve riddles, find hidden sticky notes, and type in each note's code word to win back one of the turkey's 10 tail feathers. The first team back to the dining table wins.
 
 **Play it:** https://jroltgen.github.io/gobble-hunt/
