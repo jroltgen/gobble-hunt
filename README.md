@@ -8,7 +8,7 @@ A Thanksgiving scavenger hunt you play on your phone around the house. Teams sol
 
 <img src="gobble-hunt-qr.png" alt="QR code linking to the game" width="220">
 
-Scan the code with a phone camera to open the game. For a full-page sign to print and tape up, use [`gobble-hunt-qr-sign.png`](gobble-hunt-qr-sign.png).
+Scan the code with a phone camera to open the game. For a full-page sign to print and tape up, use [`gobble-hunt-qr-sign.pdf`](gobble-hunt-qr-sign.pdf) (or the [PNG](gobble-hunt-qr-sign.png)).
 
 ## How a game works
 
