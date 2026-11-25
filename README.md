@@ -2,7 +2,7 @@
 
 <img src="silly-turkey.svg" alt="A bald-tailed turkey in a detective hat squints through a magnifying glass at a lost feather, asking: Has anyone seen my feathers?" width="600">
 
-A Thanksgiving scavenger hunt you play on your phone around the house. Teams solve riddles, find hidden sticky notes, and type in each note's code word to win back one of the turkey's 10 tail feathers. The first team back to the dining table wins.
+A Thanksgiving scavenger hunt you play on your phone around the house. Teams solve riddles, find paper feathers hidden around the house, and type in the code word on each one to win back the turkey's 10 tail feathers. The first team back to the dining table wins.
 
 **Play it:** https://jroltgen.github.io/gobble-hunt/
 
@@ -12,11 +12,11 @@ Scan the code with a phone camera to open the game. For a full-page sign to prin
 
 ## How a game works
 
-1. The host hides 10 sticky notes around the house, each with a code word written on it.
+1. The host hides the 10 paper feathers from [`feather-code-cards.pdf`](feather-code-cards.pdf) around the house. Each has a code word on it.
 2. Each team opens the game on a phone and enters a team name.
 3. Nobody can start early: the host says **Go** and announces the start code (shown on the host sheet), and each team types it in to tap **Start the hunt**.
 4. Each team gets the first 9 clues in its own shuffled order, so teams don't follow each other around the house. The last clue always leads to the dining table.
-5. At each spot, the team finds the sticky note and types in its code word to unlock the next clue.
+5. At each spot, the team finds the feather and types in its code word to unlock the next clue.
 6. Stuck? **Get a hint** shows a hint but locks that team's code box for 15 seconds. Still stuck after the hint? **Show the code word** gives away the answer for another 30-second lockout.
 7. Every phone shows a live race timer and that team's hint penalties.
 8. The first team to reach the dining table with the finish screen showing wins.
@@ -25,7 +25,7 @@ Scan the code with a phone camera to open the game. For a full-page sign to prin
 
 Print [`feather-code-cards.pdf`](feather-code-cards.pdf) at actual size on one sheet of letter paper. It has all 10 code words, each inside a feather in the game's colors, ready to cut out. Laminate the sheet, cut around each feather (leave a thin clear edge so the seal holds), and tape them up.
 
-Tap **Host setup** at the bottom of the start screen and enter the host code. The host sheet lists each hiding spot and the code word to write on its note. **Lock host sheet** hides it again on that phone.
+Tap **Host setup** at the bottom of the start screen and enter the host code. The host sheet lists each hiding spot, the code word on the feather that goes there, and the riddle that leads to it. **Lock host sheet** hides it again on that phone.
 
 Each phone keeps its own progress, so refreshing or closing the browser doesn't lose a team's place. **Start over** resets only that phone.
 

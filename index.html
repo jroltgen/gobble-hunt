@@ -190,8 +190,8 @@ html.fitpage, html.fitpage body { height: 100%; overflow: hidden; }
 <script>
 /* =========================================================================
    EDIT YOUR HUNT HERE
-   Each stop: where you hide the sticky note, the clue players read, a hint,
-   and the CODE WORD you write on the sticky note at that spot.
+   Each stop: where you hide the paper feather, the clue players read, a hint,
+   and the CODE WORD printed on that feather.
    The first clue leads to stop 1, and so on. Codes ignore upper/lower case.
    ========================================================================= */
 const HUNT = {
@@ -202,7 +202,7 @@ const HUNT = {
   hintLockSeconds: 15,     // taking a hint locks the code box this long
   revealLockSeconds: 30,   // showing the code word adds this much more lockout
   stops: [
-    { place: "Refrigerator (stick the note inside the door)",
+    { place: "Refrigerator (tape the feather inside the door)",
       clue: "I'm cold inside but full of cheer,\nthe pumpkin pie is waiting here.\nOpen me up and take a peek,\na secret code word is what you seek.",
       hint: "It hums in the kitchen and keeps the leftovers cold.",
       code: "PILGRIM",
@@ -341,7 +341,7 @@ function renderStart() {
       <h1>The Great <em>Gobble</em> Hunt</h1>
     </header>
     ${fan(0)}
-    <p>The turkey lost all ${N} tail feathers somewhere in this house. Solve each riddle, find the hidden sticky note, and type its code word to win a feather back.</p>
+    <p>The turkey lost all ${N} tail feathers somewhere in this house. Solve each riddle, find the hidden paper feather, and type the code word on it to win that feather back.</p>
     <form class="card" id="startForm">
       <label for="teamInput">Your team name</label>
       <input type="text" id="teamInput" maxlength="30" placeholder="e.g. The Drumsticks" autocomplete="off" value="${esc(state.team)}">
@@ -354,10 +354,10 @@ function renderStart() {
       <h3>How to play</h3>
       <ol class="how">
         <li>Read the riddle and go find the spot it describes.</li>
-        <li>Look for a sticky note with a code word on it.</li>
+        <li>Look for a paper feather with a code word on it.</li>
         <li>Type the code word into your phone to unlock the next clue.</li>
         <li>Stuck? Tap Get a hint, but your code box locks for ${HUNT.hintLockSeconds} seconds. Still stuck after that? You can show the code word for another ${HUNT.revealLockSeconds}-second lockout.</li>
-        <li>Leave each note where you found it for the next team.</li>
+        <li>Leave each feather where you found it for the next team.</li>
         <li>Enter your team name now. When the host says Go, they'll announce the start code. Type it in and tap Start. First team back to the dining table wins!</li>
       </ol>
     </div>
@@ -408,7 +408,7 @@ function renderClue() {
       ${helpArea}
     </section>
     <form class="card codecard" id="codeForm">
-      <label for="codeInput" class="codelabel">Code word from the sticky note</label>
+      <label for="codeInput" class="codelabel">Code word on the feather</label>
       <div class="coderow">
         <input type="text" id="codeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${locked ? "Locked…" : "Code word"}" ${locked ? "disabled" : ""}>
         <button class="btn" type="submit" ${locked ? "disabled" : ""}>Check</button>
@@ -425,14 +425,14 @@ function renderClue() {
     if (lockLeft() > 0) return;
     const input = document.getElementById("codeInput");
     const fb = document.getElementById("fb");
-    if (!norm(input.value)) { fb.className = "feedback bad"; fb.textContent = "Type the word from the sticky note first."; return; }
+    if (!norm(input.value)) { fb.className = "feedback bad"; fb.textContent = "Type the word on the feather first."; return; }
     if (norm(input.value) === norm(s.code)) {
       state.step++;
       if (state.step >= N) state.finished = Date.now();
       ui.justFound = true; save(); render(); scrollTo(0, 0);
     } else {
       ui.wrong++;
-      const msgs = ["Not quite. Check the spelling on the note.", "Nope! Are you at the right spot?", "That's not it. Maybe try a hint?"];
+      const msgs = ["Not quite. Check the spelling on the feather.", "Nope! Are you at the right spot?", "That's not it. Maybe try a hint?"];
       fb.className = "feedback bad"; fb.textContent = msgs[(ui.wrong - 1) % msgs.length];
       input.classList.remove("shake"); void input.offsetWidth; input.classList.add("shake");
       input.select();
@@ -471,7 +471,7 @@ function renderFound() {
         <p>${esc(s.fact)}</p>
       </div>
     </section>
-    <p class="muted">Leave the sticky note where you found it for the next team.</p>
+    <p class="muted">Leave the feather where you found it for the next team.</p>
     <button class="btn" type="button" id="next">${last ? "See your results" : `On to clue ${state.step + 1}`}</button>`;
   document.getElementById("next").onclick = () => { ui.justFound = false; ui.wrong = 0; render(); scrollTo(0, 0); };
 }
@@ -511,7 +511,7 @@ function renderHost() {
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
       <span class="eyebrow">Host setup</span>
-      <h2>Hide these sticky notes before the guests play</h2>
+      <h2>Hide these feathers before the guests play</h2>
     </header>
     <section class="card startcode">
       <span class="eyebrow">Start code · announce it when you say Go</span>
@@ -519,8 +519,8 @@ function renderHost() {
     </section>
     <section class="card">
       <ol class="how">
-        <li>Write each code word in big letters on its own sticky note.</li>
-        <li>Hide each note at its spot. Players only see the riddles, never this list.</li>
+        <li>Print the feather code cards (feather-code-cards.pdf in the GitHub repo), laminate the sheet, and cut out each feather.</li>
+        <li>Tape each feather at its spot. Players only see the riddles, never this list.</li>
         <li>Send everyone the link to this page. Each phone (or team) plays on its own.</li>
         <li>Each team gets the first ${N - 1} stops in a different shuffled order. The last stop is always last.</li>
         <li>Have every team enter its name. Nobody can start until you announce the start code below. Shout Go and the code together.</li>
@@ -528,7 +528,7 @@ function renderHost() {
         <li>Wait at the dining table. The first team to arrive with the finish screen showing wins.</li>
       </ol>
     </section>
-    <p class="muted">Each card shows where to hide the note, the code to write on it, and the exact riddle players will read.</p>
+    <p class="muted">Each card shows where to hide the feather, the code word on it, and the exact riddle players will read.</p>
     <ol class="stoplist">${rows}</ol>
     <div class="row">
       <button class="btn" type="button" id="back">Back to the game</button>
